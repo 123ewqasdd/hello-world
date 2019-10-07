@@ -1,0 +1,35 @@
+[
+  {
+    "Caption": "C:",
+    "Description": "\u672c\u5730\u56fa\u5b9a\u78c1\u76d8",
+    "DiskTotal": 117.99511337280273,
+    "FreeSpace": 35.79041290283203,
+    "Name": "C:",
+    "Percent": 69,
+    "UseSpace": 82.2047004699707,
+    "VolumeName": "Windows",
+    "disk": "KBG30ZMT128G TOSHIBA"
+  },
+  {
+    "Caption": "D:",
+    "Description": "\u672c\u5730\u56fa\u5b9a\u78c1\u76d8",
+    "DiskTotal": 638.4179649353027,
+    "FreeSpace": 210.56493759155273,
+    "Name": "D:",
+    "Percent": 67,
+    "UseSpace": 427.85302734375,
+    "VolumeName": "Data",
+    "disk": "WDC WD10SPZX-08Z10"
+  },
+  {
+    "Caption": "E:",
+    "Description": "\u672c\u5730\u56fa\u5b9a\u78c1\u76d8",
+    "DiskTotal": 292.96776962280273,
+    "FreeSpace": 252.83099365234375,
+    "Name": "E:",
+    "Percent": 13,
+    "UseSpace": 40.136775970458984,
+    "VolumeName": "\u65b0\u52a0\u5377",
+    "disk": "WDC WD10SPZX-08Z10"
+  }
+]

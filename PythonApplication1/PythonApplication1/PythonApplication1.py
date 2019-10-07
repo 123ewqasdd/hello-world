@@ -1,120 +1,102 @@
 #Author by 050chao
-#-*- coding:utf-8 -*-
+#!/usr/bin/python3 
+# -*- coding:utf-8 -*-
 import os
 import sys
 import FileInfo
+import config_configparser
+import disk_info
+import FileHelper
+import json
+import time
+import pickle
+# è°ƒç”¨shelper
+from RedisHelper import RedisHelper
+from LogHelper import LogHelper
 
 
 
 #def formatTime(longtime):
-#    #'''¸ñÊ½»¯Ê±¼äµÄº¯Êı'''
+#    
 #    import time
-#    return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(localtime))
-#def formatByte(number):
-#    #'''¸ñÊ½»¯ÎÄ¼ş´óĞ¡µÄº¯Êı'''
-#    for (scale.label) in [(1024*1024*1024,"GB"),(1024*1024,"MB"),(1024,"KB")]:
-#        if number>=scale:
-#            return  "%.2f %s" %(number*1.0/scale,lable)
-#        elif number ==1:
-#            return  r"1×Ö½Ú"
-#        else:#Ğ¡ÓÚ1×Ö½Ú
-#            byte = "%.2f" % (number or 0)
-#    return (byte[:-3])    #(if byte.endswith(".00") else byte)+"×Ö½Ú"
+#    return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(localtime
 
 
-#fileinfo = os.stat("mr.png")  #»ñÈ¡ÎÄ¼şµÄ»ù±¾ĞÅÏ¢
-#print("ÎÄ¼şÍêÕûÂ·¾¶£º",os.path.abspath("mr.png"))  #»ñÈ¡ÎÄ¼şµÄÍêÕûÂ·¾¶
-##Êä³öÎÄ¼şµÄ»ù±¾ĞÅÏ¢
-#print("Ë÷ÒıºÅ:",fileinfo.st_ino)
+#fileinfo = os.stat("mr.png")  
+#print("find file ",os.path.abspath("mr.png"))  
+
+#print("file index:",fileinfo.st_ino)
 #print(type(fileinfo.st_ino))
-#print("Éè±¸Ãû:",fileinfo.st_dev)
-#print("ÎÄ¼ş´óĞ¡:",formatByte(fileinfo.st_size))
-#print("×îºóÒ»´Î·ÃÎÊÊ±¼ä:",formatTime(fileinfo.st_atime))
-#print("×îºóÒ»´ÎĞŞ¸ÄÊ±¼ä:",fileinfo.st_mtime)
-#print("×îºóÒ»´Î×´Ì¬±ä»¯µÄÊ±¼ä:",fileinfo.st_ctime)
+#print("file device:",fileinfo.st_dev)
+#print("file size:",formatByte(fileinfo.st_size))
+#print("file  time:",formatTime(fileinfo.st_atime))
+#print("file adit time:",fileinfo.st_mtime)
+#print("file create time:",fileinfo.st_ctime)
+
+
+print('--------------------------------------read config')
+#print(config_configparser.config_write())
+config = config_configparser.config_read()
+print(config)
+log_file = (config['DEFAULT']['server action'])
+
+b_loop= True
+log = LogHelper(log_file)
+
+# å®ä¾‹åŒ–RedisHelperç±»å¯¹è±¡
+str_r_ip=config['redis']['ip2']
+str_r_port=config['redis']['port2']
+str_r_pwd = config['redis']['pwd2']
+str_r_chan = config['redis']['chan1']
+str_r_db = config['redis']['db']
+str_r_chan2 = config['redis']['chan2']
+
+lists_header = config.sections()  
+str_config = ""
+for secs in lists_header:
+    for key in config[secs]:  
+        str_config = str_config + " " + key + ":" + config[secs][key]
+
+LogHelper.info(str_config)
 
 
 
-#¸ù¾İÄ¿Â¼ËÑË÷ÎÄ¼ş
-def list_all_files(rootdir):
-    _files = []
-    list = os.listdir(rootdir) #ÁĞ³öÎÄ¼ş¼ĞÏÂËùÓĞµÄÄ¿Â¼ÓëÎÄ¼ş
-    for i in range(0,len(list)):
-        path = os.path.join(rootdir,list[i]) #ºÏ²¢Â·¾¶
-        if os.path.isdir(path):
-            _files.extend(list_all_files(path)) #µİ¹éµ÷ÓÃº¯Êı
-        if os.path.isfile(path):
-            _files.append(path)
-    return _files
-
-def search_file_by_str(rootdir,strs):
-    _files = []
-    for root,dirs,files in os.walk(rootdir):
-        for i in range(0,len(dirs)):
-            _files.extend( search_file_by_str(dirs[i],strs))
-        
-        for i in range(0,len(files)):
-            for j in range(0,len(strs)):
-                if files[i].endswith(strs[j]):
-                    p = FileInfo.FileInfo()
-                    p.fileRoot = rootdir
-                    p.fileName = files[i]
-                    p.fileFullPath = os.path.join(rootdir,files[i])
-                    p.fileExtension = strs[j]
-                    fi = os.stat(p.fileFullPath)
-                    p.fileIndex = fi.st_ino
-                    p.fileSize = fi.st_size
-                    _files.append(p)
-    return _files         
-           
-    
+obj = RedisHelper(str_r_ip,str_r_pwd,str_r_port,str_r_db,str_r_chan)
+# èµ‹å€¼è®¢é˜…å˜é‡
+redis_sub = obj.subscribe()
 
 
-def search_file(path,name):
-    for root,dirs,files in os.walk(path):
-        if name in dirs or name in files:
-            flag = 1 #ÅĞ¶ÏÊÇ·ñÕÒµ½ÎÄ¼ş
-            root = str(root)
-            dirs = str(dirs)
-            return os.path.join(root,dirs)
-    return -1
+while b_loop:
+    msg = redis_sub.parse_response()
+    print(msg)
+    time.sleep(1)
+
+print('--------------------------------------')
 
 
+'''
+
+disk = disk_info.get_disk_info() 
+print(disk )
+print('--------------------------------------')
+fs = disk_info.get_fs_info() 
+print(fs)
+
+json_str = json.dumps(fs,indent=2,sort_keys=True)
+print(type(json_str))
+print(json_str)
+print('--------------------------------------')
+str_fileName = config['DEFAULT']['disk_info_save']
+if len(str_fileName) > 0:
+    #å°†æ•°æ®åºåˆ—åŒ–åå­˜å‚¨åˆ°æ–‡ä»¶ä¸­
+    f = open(str_fileName,'wb')   
+    f.write(json_str.encode("utf-8"))   #dumpsåºåˆ—åŒ–æºæ•°æ®åå†™å…¥æ–‡ä»¶
+    f.close()
+    print('--------------------------------------')
+    f = open(str_fileName,'rb')
+    da = json.loads(f.read())   #ä½¿ç”¨loadsååºåˆ—åŒ–
+    print(da)
+    print('--------------------------------------')
 
 
-#========list_all_files
-rootdir = 'E:\OceanTestData'
-file = list_all_files(rootdir)
-
-print(len(file))
-print(file)
-
-
-
-##=======search_file
-#path = input(r'ÇëÊäÈëÄúÒª²éÕÒÄÄ¸öÂ·¾¶(Èç:D:\\\)')
-#print('ÇëÊäÈëÄúÒª²éÕÒµÄÎÄ¼şÃû£º')
-#name = sys.stdin.readline().rstrip() #±ê×¼ÊäÈë£¬ÆäÖĞrestrip()º¯Êı°Ñ×Ö·û´®½áÎ²µÄ¿Õ°×ºÍ»Ø³µÉ¾³ı
-#answer = search_file(path,name)
-#if answer == -1:
-#    print('²éÎŞ´ËÎÄ¼ş')
-#else:
-#    print(answer)
-
-
-#==========search_file_by_str
-strs = ['.txt','.png']
-file =  search_file_by_str(rootdir,strs)
-
-for i in range(0,len(file)):
-    print(file[i].fileIndex)
-    print(file[i].fileRoot)
-    print(file[i].fileName)
-    print(file[i].fileExtension)
-    print(file[i].fileFullPath)
-    print(file[i].fileSize)
-    
-
-
-##print(os.getcwd())  #ÔËĞĞÂ·¾¶
-
+'''

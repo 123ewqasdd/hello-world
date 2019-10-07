@@ -22,10 +22,31 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="command_info.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="config_configparser.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="disk_info.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FileHelper.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="FileInfo.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="LogHelper.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PythonApplication1.py" />
+    <Compile Include="RedisHelper.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Result_info.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
