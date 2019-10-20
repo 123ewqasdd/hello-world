@@ -40,6 +40,9 @@
     <Compile Include="LogHelper.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MD5Helper.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PythonApplication1.py" />
     <Compile Include="RedisHelper.py">
       <SubType>Code</SubType>

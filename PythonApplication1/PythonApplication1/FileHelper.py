@@ -18,21 +18,22 @@ def list_all_files(rootdir):
 
 def search_file_by_str(rootdir,strs):
     _files = []
-    for root,dirs,files in os.walk(rootdir):
-        for i in range(0,len(dirs)):
-            _files.extend( search_file_by_str(dirs[i],strs))
+    for root,dirs,files in os.walk(rootdir):     
+        #for i in range(0,len(dirs)):
+        #    str_dir_temp = root + dirs[i] + "\\"
+        #    _files.extend( search_file_by_str(str_dir_temp,strs))
         
         for i in range(0,len(files)):
             for j in range(0,len(strs)):
                 if files[i].endswith(strs[j]):
                     p = FileInfo.FileInfo()
-                    p.fileRoot = rootdir
+                    p.fileRoot = root
                     p.fileName = files[i]
-                    p.fileFullPath = os.path.join(rootdir,files[i])
+                    p.fileFullPath = os.path.join(root,files[i])
                     p.fileExtension = strs[j]
                     fi = os.stat(p.fileFullPath)
                     p.fileIndex = fi.st_ino
-                    p.fileSize = fi.st_size
+                    p.fileSize = int(fi.st_size) /1024 /1024 /1024
                     _files.append(p)
     return _files         
            

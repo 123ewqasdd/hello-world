@@ -27,9 +27,9 @@ class RedisHelper:
         # 调频道 subscribe
         pub.subscribe(self.chan_sub)
 
-        # 准备接收parse_response()
-        # 在次调用parse_response() 开始接收
-        pub.parse_response()
+        ## 准备接收parse_response()
+        ## 在次调用parse_response() 开始接收
+        #pub.parse_response()
 
         # 返回订阅变量
         return pub

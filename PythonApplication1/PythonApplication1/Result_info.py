@@ -3,12 +3,13 @@
 
 class Result_info:
     flag = True
-    code = '0'
+    type = 0
+    code = 0
     msg = ""
-    obj
 
     def __init__(self):
         self.flag =True
-        self.code = "0"
+        type = 0
+        self.code = 0
         self.msg = ""
         

@@ -1,13 +1,15 @@
 #!/usr/bin/python3 
 # -*- coding:utf-8 -*-
 
-class FileInfo(object):    
-    fileIndex = 0
+class FileInfo:    
+    fileIndex = ''
     fileRoot = ''
+    fileDir = ''
     fileName = ''
     fileFullPath = ''
     fileExtension = ''
     fileSize = 0
+    fileRootID = ''
 
 #	
 #print (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))

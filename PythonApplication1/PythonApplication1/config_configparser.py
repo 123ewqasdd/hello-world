@@ -15,6 +15,8 @@ version = 1.0.0
 server action = logs.txt
 disk_info_save=disk_info.txt
 scan_info_save=scan_info.txt
+scan_filter=.avi,.mp4,.rmvb,.flv
+copy_dir = 1
 
 [chao.me]
 user = chao
@@ -44,7 +46,9 @@ def config_write():
     config['DEFAULT'] = {'version': '1.0.0',
                          'server action': 'logs.txt',
                          'disk_info_save': 'disk_info.txt',
-                         'scan_info_save': 'scan_info.txt'}
+                         'scan_info_save': 'scan_info.txt',
+                          'scan_filter': '.avi,.mp4,.rmvb,.flv',
+                          'copy_dir': '1'}
 
     config['chao.me'] = {}
     config['chao.me']['user'] = 'chao'
