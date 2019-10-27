@@ -15,6 +15,7 @@ from RedisHelper import RedisHelper
 from LogHelper import LogHelper
 from Result_info import Result_info
 from command_info import command_info
+from TaskInfo import TaskInfo
 
 
 
@@ -37,7 +38,7 @@ from command_info import command_info
 
 
 def search_file_by_str2(rootdir,strs,obj_result,o_redis,str_id):
-    for root,dirs,files in os.walk(rootdir):     
+    for root,dirs,files in os.walk(rootdir,followlinks=True):     
         #for i in range(0,len(dirs)):
         #    str_dir_temp = os.path.join(root, dirs[i]) + "\\"
         #    #str_dir_temp = root + dirs[i] + "\\"
@@ -91,7 +92,6 @@ print(sys.getdefaultencoding())
 
 #arr_files = disk_info.my_copy_file(file_m,"E:\\")
 #print(arr_files)
-
 
 
 print('--------------------------------------read config')
@@ -172,11 +172,36 @@ for item in redis_sub.listen():
                 #写入redis并发出消息
                 obj.public(str_result.encode("utf-8"))
             elif obj_msg.type == 4:     #拷贝任务，   拷贝文件/目录——》目标硬盘根目录
-                obj_result.flag =True        
+                 #新建一个新的command_info对象
+                obj_task=TaskInfo()
+                #将字典转化为对象
+                obj_task.__dict__=json.loads(obj_msg.tag) 
+                LogHelper.debug(obj_task.arr_source)  
                 dirs = obj_msg.msg.split(',.,')       #多个拷贝任务，   C:,D:,E:
-                #obj_msg.msg2   #1 单个文件  2目录   拷贝
+                #obj_msg.msg2   #0 单个文件  1目录   拷贝
+                if obj_msg.msg2 == "0":
+                    str_result = ""
+                    for name in dirs:
+                        if os.path.isfile(name):
+                            str_copy_dir = os.path.dirname(name)
+                            str_result = disk_info.copy_file(str_copy_dir,name,obj_task.target)
+                            arr_result = str_result.split(',.,')
+                            if len(arr_result[1]) == 0:
+                                obj_result.flag =True  
+                                obj_result.code =int(obj_msg.msg2)
+                                obj_result.msg = obj_task.id +",.,"+name+",.,"+arr_result[0]
+                            else:
+                                obj_result.flag =False  
+                                obj_result.code =int(obj_msg.msg2)
+                                obj_result.msg = obj_task.id +",.,"+name+",.,"+arr_result[0]
+                            obj.public(json_dict_to_str(obj_result.__dict__))
+
+                elif obj_msg.msg2 == "1":
+                     obj_msg.msg2 = "2"
 
 
+               
+                
             else:
                 obj_result.flag =False
                 obj_result.code = 0
