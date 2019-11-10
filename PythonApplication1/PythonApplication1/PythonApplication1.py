@@ -36,6 +36,80 @@ from TaskInfo import TaskInfo
 #print("file adit time:",fileinfo.st_mtime)
 #print("file create time:",fileinfo.st_ctime)
 
+#根据数组dirs,exts里的文件获取目标文件
+#dirs 目录数组，对应数组存在文件夹名称则返回上一级目录作为目标文件
+#exts1 后缀名数组1，对应数组存在后缀名则返回上一级目录作为目标文件
+#exts2 后罪名数组2，对应数组存在后缀名则返回当前文件作为目标文件
+def get_my_files(rootdir,dirs,exts1,exts2,obj_result,o_redis,str_id):
+    str_root = rootdir
+    for str in os.listdir(str_root):
+        str_path = (str_root+ os.sep + str)   
+        if os.path.isdir(str_path):
+            if str in dirs:
+                p = FileInfo()
+                p.fileDir = disk_info.getUpUpDirPath(str_path)
+                p.fileRoot = disk_info.getRootDir(str_path)
+                p.fileName = disk_info.getUpDir(str_path)
+                p.fileFullPath = disk_info.getUpDirPath(str_path)
+                p.fileExtension = "DIR"
+                #由于是文件夹，所以没有判定文件序列、大小
+                #fi = os.stat(p.fileFullPath)
+                #p.fileIndex = fi.st_ino
+                #p.fileSize = int(fi.st_size) /1024/1024/1024
+                p.fileIndex = "1"
+                p.fileSize = get_dir_file_size(p.fileFullPath)
+                p.fileRootID = str_id
+                #封装消息
+                obj_result.code = 1
+                obj_result.msg = json_dict_to_str(p.__dict__)
+                str_result = json_dict_to_str(obj_result.__dict__)
+                redis_public(o_redis,str_result)
+                return
+        elif os.path.isfile(str_path):
+            str_path = str_path.lower()
+            for ext1 in exts1:
+                if str_path.endswith(ext1):
+                    p = FileInfo()
+                    p.fileDir = disk_info.getUpUpDirPath(str_path)
+                    p.fileRoot = disk_info.getRootDir(str_path)
+                    p.fileName = disk_info.getCurrentDir(str_path)
+                    p.fileFullPath = disk_info.getUpDirPath(str_path)
+                    p.fileExtension = ext1
+                    #fi = os.stat(p.fileFullPath)
+                    #p.fileIndex = fi.st_ino
+                    #p.fileSize = int(fi.st_size) /1024/1024/1024
+                    p.fileIndex = "1"
+                    p.fileSize = get_dir_file_size(p.fileFullPath)
+                    p.fileRootID = str_id
+                    #封装消息
+                    obj_result.code = 1
+                    obj_result.msg = json_dict_to_str(p.__dict__)
+                    str_result = json_dict_to_str(obj_result.__dict__)
+                    redis_public(o_redis,str_result) 
+                    return
+            
+            for ext2 in exts2:
+                if str_path.endswith(ext2):
+                     p = FileInfo()
+                     p.fileDir = disk_info.getUpDirPath(str_path)
+                     p.fileRoot = disk_info.getRootDir(str_path)
+                     p.fileName = str
+                     p.fileFullPath = str_path
+                     p.fileExtension = ext1
+                     fi = os.stat(p.fileFullPath)
+                     p.fileIndex = fi.st_ino
+                     p.fileSize = int(fi.st_size) /1024/1024/1024                    
+                     p.fileRootID = str_id
+                     #封装消息
+                     obj_result.code = 1
+                     obj_result.msg = json_dict_to_str(p.__dict__)
+                     str_result = json_dict_to_str(obj_result.__dict__)
+                     redis_public(o_redis,str_result) 
+                     
+        if os.path.isdir(str_path):
+            get_my_files(str_path,dirs,exts1,exts2,obj_result,o_redis,str_id)
+
+
 
 def search_file_by_str2(rootdir,strs,obj_result,o_redis,str_id):
     for root,dirs,files in os.walk(rootdir,followlinks=True):     
@@ -88,11 +162,6 @@ def redis_public(o_redis,msg):
 
 print(sys.getdefaultencoding())
 
-#file_m = "D:\\迅雷下载\\BT\\新建文件夹"
-
-#arr_files = disk_info.my_copy_file(file_m,"E:\\")
-#print(arr_files)
-
 
 print('--------------------------------------read config')
 #print(config_configparser.config_write())
@@ -119,7 +188,6 @@ for secs in lists_header:
         str_config = str_config + " " + key + ":" + config[secs][key]
 
 LogHelper.info(str_config)
-
 
 
 obj = RedisHelper(str_r_ip,str_r_pwd,str_r_port,str_r_db,str_r_chan,str_r_chan2)
@@ -150,13 +218,21 @@ for item in redis_sub.listen():
             elif obj_msg.type == 2:     #2、扫描硬盘
                 obj_result.flag =True               
                 dirs = obj_msg.msg.split(',.,')       #多个目录扫描，   C:,D:,E:
-                args = obj_msg.msg2.split(',')      #多个条件搜索，    .txt,.png
-                ids = obj_msg.tag.split(',.,')      #多个盘符的ID，    6,7
+                args = obj_msg.msg2.split(';')      #多个条件搜索，    .txt,.png
+                ids = obj_msg.tag.split(',.,')      #多个盘符的ID，    6,7   
+                args0 = [] 
+                args1 = []
+                args2 = []
+                if len(args) > 0:
+                    args0 = args[0].split(',')
+                if len(args) > 2 :
+                    args2 = args[2].split(',')
+                if len(args) > 1:
+                    args1 = args[1].split(',')
                 for i in range(0,len(dirs)):
-                    search_file_by_str2(dirs[i],args,obj_result,obj,ids[i])
-
-                #for dir in dirs:                    
-                #    search_file_by_str2(dir,args,obj_result,obj)                       
+                    get_my_files(dirs[i],args0,args1,args2,obj_result,obj,ids[i])
+                    #search_file_by_str2(dirs[i],args,obj_result,obj,ids[i])
+                    
             elif obj_msg.type ==3:      #获取文件夹大小
                 obj_result.flag =True        
                 dirs = obj_msg.msg.split(',.,')       #多个目录扫描，   C:,D:,E:
@@ -178,28 +254,70 @@ for item in redis_sub.listen():
                 obj_task.__dict__=json.loads(obj_msg.tag) 
                 LogHelper.debug(obj_task.arr_source)  
                 dirs = obj_msg.msg.split(',.,')       #多个拷贝任务，   C:,D:,E:
+                types = obj_msg.msg2.split(',.,')
                 #obj_msg.msg2   #0 单个文件  1目录   拷贝
-                if obj_msg.msg2 == "0":
-                    str_result = ""
-                    for name in dirs:
-                        if os.path.isfile(name):
-                            str_copy_dir = os.path.dirname(name)
-                            str_result = disk_info.copy_file(str_copy_dir,name,obj_task.target)
+                for i in range(0,len(types)):
+                    if types[i] == "0":
+                        str_result = ""
+                        if os.path.isfile(dirs[i]): 
+                            str_result = disk_info.copy_file(dirs[i],obj_task.target)
                             arr_result = str_result.split(',.,')
                             if len(arr_result[1]) == 0:
                                 obj_result.flag =True  
-                                obj_result.code =int(obj_msg.msg2)
-                                obj_result.msg = obj_task.id +",.,"+name+",.,"+arr_result[0]
+                                obj_result.code =int(types[i])
+                                obj_result.msg = obj_task.id +",.,"+dirs[i]+",.,"+arr_result[0]
                             else:
                                 obj_result.flag =False  
-                                obj_result.code =int(obj_msg.msg2)
-                                obj_result.msg = obj_task.id +",.,"+name+",.,"+arr_result[0]
+                                obj_result.code =int(types[i])
+                                obj_result.msg = obj_task.id +",.,"+dirs[i]+",.,"+arr_result[0]
                             obj.public(json_dict_to_str(obj_result.__dict__))
+                    elif types[i] == "1":
+                        str_result = ""
+                        if os.path.exists(dirs[i]):
+                             str_result = disk_info.my_copy_file(dirs[i],obj_task.target)
+                             arr_result = str_result.split(',.,')
+                             if len(arr_result[1]) == 0:
+                                obj_result.flag =True  
+                                obj_result.code =int(types[i])
+                                obj_result.msg = obj_task.id +",.,"+dirs[i]+",.,"+arr_result[0]
+                             else:
+                                obj_result.flag =False  
+                                obj_result.code =int(types[i])
+                                obj_result.msg = obj_task.id +",.,"+dirs[i]+",.,"+arr_result[0]
+                             obj.public(json_dict_to_str(obj_result.__dict__))
 
-                elif obj_msg.msg2 == "1":
-                     obj_msg.msg2 = "2"
 
+                #if obj_msg.msg2 == "0":
+                #    str_result = ""
+                #    for name in dirs:
+                #        if os.path.isfile(name):                            
+                #            str_result = disk_info.copy_file(name,obj_task.target)
+                #            arr_result = str_result.split(',.,')
+                #            if len(arr_result[1]) == 0:
+                #                obj_result.flag =True  
+                #                obj_result.code =int(obj_msg.msg2)
+                #                obj_result.msg = obj_task.id +",.,"+name+",.,"+arr_result[0]
+                #            else:
+                #                obj_result.flag =False  
+                #                obj_result.code =int(obj_msg.msg2)
+                #                obj_result.msg = obj_task.id +",.,"+name+",.,"+arr_result[0]
+                #            obj.public(json_dict_to_str(obj_result.__dict__))
 
+                #elif obj_msg.msg2 == "1":
+                #     str_result = ""
+                #     for dir in dirs:
+                #         if os.path.exists(dir):
+                #             str_result = disk_info.my_copy_file(dir,obj_task.target)
+                #             arr_result = str_result.split(',.,')
+                #             if len(arr_result[1]) == 0:
+                #                obj_result.flag =True  
+                #                obj_result.code =int(obj_msg.msg2)
+                #                obj_result.msg = obj_task.id +",.,"+dir+",.,"+arr_result[0]
+                #             else:
+                #                obj_result.flag =False  
+                #                obj_result.code =int(obj_msg.msg2)
+                #                obj_result.msg = obj_task.id +",.,"+dir+",.,"+arr_result[0]
+                #             obj.public(json_dict_to_str(obj_result.__dict__))
                
                 
             else:

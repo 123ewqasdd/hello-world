@@ -54,11 +54,12 @@ def my_copy_file(source_file,target):
         arr_files = get_dir_files(str_dir)
         i_file_count = len(arr_files)
         for name in arr_files:
-            copy_file(str_dir,name,target)
-        return i_file_count + ",.,"
+            copy_file(name,target)
+        return str(i_file_count) + ",.,"
     except Exception as e:
         LogHelper.error("CopyError1:" + e.message)
         return i_file_count + ",.," + "CopyError1:" + e.message
+
     
 
 #获取文件夹下所有的文件
@@ -68,15 +69,18 @@ def get_dir_files(rootdir):
         for root,dirs,files in os.walk(rootdir,followlinks=True):
             for name in files:
                 result.append(os.path.join(root, name))
+            #for name in dirs:
+            #    result.append(os.path.join(root, name))
            
     elif os.path.isfile(rootdir):
         result.append(rootdir)
     return result
 
 #复制文件到目标地址
-def copy_file(source,source_file,target_file):
+def copy_file(source_file,target_file):
     try:
-        desfilename=source_file.replace('/','\\').replace(source,target_file,1).replace('\\\\','\\')
+        source = getRootDir(source_file)
+        desfilename=source_file.replace('/',os.sep).replace(source,target_file,1).replace('\\\\',os.sep)
    
         LogHelper.debug(source_file +  "  copy to   "+desfilename)
         if not os.path.exists(os.path.dirname(desfilename)):
@@ -87,5 +91,80 @@ def copy_file(source,source_file,target_file):
     except Exception as e:
         LogHelper.error("CopyError0:" + e.message)
         return "0,.,CopyError0:" + e.message
+
+#获取根目录
+def getRootDir(fullpathfile):
+    abs_path = os.path.abspath(fullpathfile).split(os.sep)
+    if len(abs_path)> 0:
+        return abs_path[0]
+    return ""
+
+#获取当前文件夹
+def getCurrentDir(fullpathfile):
+    abs_path = os.path.abspath(fullpathfile).split(os.sep)
+    cur_dir = ""
+    if os.path.isdir(fullpathfile):        
+        if len(abs_path)> 0:
+            cur_dir = abs_path[(len(abs_path)-1)]
+    elif os.path.isfile(fullpathfile):
+        if len(abs_path)> 1:
+            cur_dir = abs_path[(len(abs_path)-2)]
+    return cur_dir
+
+#获取上一级文件夹
+def getUpDir(fullpathfile):
+    abs_path = os.path.abspath(fullpathfile).split(os.sep)
+    cur_dir = ""
+    len_path = len(abs_path)    
+    if os.path.isdir(fullpathfile):        
+        if len_path> 1:
+            cur_dir = abs_path[(len_path-2)]
+    elif os.path.isfile(fullpathfile):
+        if len_path> 2:
+            cur_dir = abs_path[(len_path-3)]
+    return cur_dir
+
+
+#获取当前文件夹的上一级文件夹完整路径
+def getUpDirPath(fullpathfile):
+    abs_path = os.path.abspath(fullpathfile).split(os.sep)
+    i_len = len(abs_path)
+    full_path =""   
+    if i_len > 1:
+        full_path =abs_path[0]  
+        for i in range(1,i_len):
+            if i < i_len -1 :
+                full_path = (full_path+ os.sep + abs_path[i])                
+            else:
+                break                            
+
+    return full_path
+
+#获取当前文件夹的上两级文件夹完整路径
+def getUpUpDirPath(fullpathfile):
+    abs_path = os.path.abspath(fullpathfile).split(os.sep)
+    i_len = len(abs_path)
+    full_path =""   
+    if i_len > 2:
+        full_path =abs_path[0]  
+        for i in range(1,i_len):
+            if i < i_len -2 :
+                full_path = (full_path+ os.sep + abs_path[i])                
+            else:
+                break                            
+
+    return full_path
+
+         
+
+    #separator = getSeparator()
+    #str = fullpathfile.split(separator)
+    #while len(str) > 0:
+    #    leng = len(str)
+    #    spath = separator.join(str)+separator+fullpathfile
+    #    leng = len(str)
+    #    if os.path.exists(spath):
+    #        return spath
+    #    str.remove(str[leng-1])
     
     
